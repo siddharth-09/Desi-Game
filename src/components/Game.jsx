@@ -13,7 +13,8 @@ const Game = () => {
     createRoom, 
     joinRoom, 
     shoot, 
-    subscribeToRoom 
+    subscribeToRoom,
+    hideBullets
   } = useGameState()
 
   useEffect(() => {
@@ -29,6 +30,17 @@ const Game = () => {
       setLastAction(gameState.room.last_action)
     }
   }, [gameState.room?.last_action])
+
+  useEffect(() => {
+    // Auto-hide bullet composition after 3 seconds when game starts
+    if (gameState.showBullets && gameState.gameStatus === 'playing') {
+      const timer = setTimeout(() => {
+        hideBullets()
+      }, 3000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [gameState.showBullets, gameState.gameStatus, hideBullets])
 
   const handleCreateRoom = async () => {
     const roomId = await createRoom()
@@ -108,6 +120,27 @@ const Game = () => {
         <button onClick={() => window.location.reload()}>
           Play Again
         </button>
+      </div>
+    )
+  }
+
+  // Show bullet composition overlay when game starts
+  if (gameState.showBullets && gameState.bulletComposition) {
+    return (
+      <div className="bullet-reveal">
+        <h2>Round Starting!</h2>
+        <div className="bullet-composition">
+          <h3>Bullet Composition:</h3>
+          <div className="bullet-counts">
+            <div className="real-bullets">
+              🔴 Real Bullets: {gameState.bulletComposition.real}
+            </div>
+            <div className="fake-bullets">
+              ⚪ Fake Bullets: {gameState.bulletComposition.fake}
+            </div>
+          </div>
+          <p>Good luck! The bullets have been shuffled.</p>
+        </div>
       </div>
     )
   }

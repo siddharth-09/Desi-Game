@@ -5,6 +5,8 @@ export const useGameState = () => {
   const [gameState, setGameState] = useState({
     room: null,
     bullets: [],
+    bulletComposition: null,
+    showBullets: false,
     currentPlayer: null,
     players: [],
     gameStatus: 'waiting', // waiting, playing, finished
@@ -23,24 +25,32 @@ export const useGameState = () => {
 
   const generateBullets = (count = 6) => {
     const bullets = []
-    const realBullets = Math.floor(count / 2) + Math.floor(Math.random() * 2) // 3-4 real bullets
+    // Random number of real bullets between 2 and count-2 (ensuring at least 2 fake and 2 real)
+    const minReal = Math.max(2, Math.floor(count * 0.3))
+    const maxReal = Math.min(count - 2, Math.floor(count * 0.7))
+    const realBullets = Math.floor(Math.random() * (maxReal - minReal + 1)) + minReal
+    const fakeBullets = count - realBullets
     
-    for (let i = 0; i < count; i++) {
-      bullets.push(i < realBullets ? 'real' : 'fake')
+    // Create array with specified number of real and fake bullets
+    for (let i = 0; i < realBullets; i++) {
+      bullets.push('real')
+    }
+    for (let i = 0; i < fakeBullets; i++) {
+      bullets.push('fake')
     }
     
-    // Shuffle the bullets
+    // Shuffle the bullets using Fisher-Yates algorithm
     for (let i = bullets.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[bullets[i], bullets[j]] = [bullets[j], bullets[i]]
     }
     
-    return bullets
+    return { bullets, composition: { real: realBullets, fake: fakeBullets } }
   }
 
   const createRoom = async () => {
     const roomId = Math.random().toString(36).substring(2, 8).toUpperCase()
-    const bullets = generateBullets()
+    const { bullets, composition } = generateBullets()
     
     const { data, error } = await supabase
       .from('game_rooms')
@@ -48,6 +58,7 @@ export const useGameState = () => {
         room_id: roomId,
         player1_id: playerId,
         bullets: bullets,
+        bullet_composition: composition,
         game_status: 'waiting',
         current_turn: playerId,
         player1_health: 3,
@@ -65,6 +76,7 @@ export const useGameState = () => {
       ...prev,
       room: data[0],
       bullets: bullets,
+      bulletComposition: composition,
       players: [playerId],
       currentPlayer: playerId,
       currentTurn: playerId
@@ -105,9 +117,11 @@ export const useGameState = () => {
       ...prev,
       room: data[0],
       bullets: room.bullets,
+      bulletComposition: room.bullet_composition,
       players: [room.player1_id, playerId],
       currentPlayer: playerId,
-      gameStatus: 'playing'
+      gameStatus: 'playing',
+      showBullets: true // Show bullets when game starts
     }))
 
     return true
@@ -119,8 +133,9 @@ export const useGameState = () => {
     const currentBullet = gameState.bullets[gameState.currentBulletIndex]
     const isShootingSelf = target === 'self'
     const shooter = playerId
-    const targetPlayer = isShootingSelf ? playerId : (playerId === gameState.room.player1_id ? gameState.room.player2_id : gameState.room.player1_id)
 
+    const targetPlayer = isShootingSelf ? playerId : (playerId === gameState.room.player1_id ? gameState.room.player2_id : gameState.room.player1_id)
+    
     // Determine animation trigger
     let animationTrigger
     if (isShootingSelf) {
@@ -200,6 +215,7 @@ export const useGameState = () => {
             ...prev,
             room: updatedRoom,
             bullets: updatedRoom.bullets,
+            bulletComposition: updatedRoom.bullet_composition,
             gameStatus: updatedRoom.game_status,
             currentTurn: updatedRoom.current_turn,
             playerHealth: {
@@ -207,7 +223,8 @@ export const useGameState = () => {
               player2: updatedRoom.player2_health
             },
             currentBulletIndex: updatedRoom.current_bullet_index,
-            players: [updatedRoom.player1_id, updatedRoom.player2_id].filter(Boolean)
+            players: [updatedRoom.player1_id, updatedRoom.player2_id].filter(Boolean),
+            showBullets: updatedRoom.game_status === 'playing' && prev.gameStatus !== 'playing' // Show bullets when game starts
           }))
         }
       )
@@ -218,12 +235,17 @@ export const useGameState = () => {
     }
   }
 
+  const hideBullets = () => {
+    setGameState(prev => ({ ...prev, showBullets: false }))
+  }
+
   return {
     gameState,
     playerId,
     createRoom,
     joinRoom,
     shoot,
-    subscribeToRoom
+    subscribeToRoom,
+    hideBullets
   }
 }

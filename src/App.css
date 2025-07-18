@@ -205,3 +205,65 @@
 .game-over button:hover {
   background-color: #e55a2e;
 }
+
+/* Bullet composition reveal styles */
+.bullet-reveal {
+  text-align: center;
+  padding: 3rem;
+  background-color: #2a2a2a;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.bullet-reveal h2 {
+  color: #ff6b35;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.bullet-composition {
+  background-color: #3a3a3a;
+  padding: 2rem;
+  border-radius: 8px;
+  border: 2px solid #ff6b35;
+}
+
+.bullet-composition h3 {
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.bullet-counts {
+  display: flex;
+  justify-content: space-around;
+  margin: 1.5rem 0;
+}
+
+.real-bullets, .fake-bullets {
+  background-color: #4a4a4a;
+  padding: 1rem;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  min-width: 150px;
+}
+
+.real-bullets {
+  color: #ff4444;
+  border: 2px solid #ff4444;
+}
+
+.fake-bullets {
+  color: #44ff44;
+  border: 2px solid #44ff44;
+}
+
+.bullet-composition p {
+  margin-top: 1.5rem;
+  font-style: italic;
+  color: #cccccc;
+  font-size: 1.1rem;
+}

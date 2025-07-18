@@ -5,6 +5,7 @@ CREATE TABLE game_rooms (
   player1_id VARCHAR(50) NOT NULL,
   player2_id VARCHAR(50),
   bullets JSONB NOT NULL DEFAULT '[]',
+  bullet_composition JSONB,
   game_status VARCHAR(20) DEFAULT 'waiting',
   current_turn VARCHAR(50),
   player1_health INTEGER DEFAULT 3,
